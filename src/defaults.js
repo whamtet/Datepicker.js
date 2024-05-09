@@ -115,9 +115,11 @@ export default {
     timepicker: [
       '<div class="datepicker__time">',
         '<span class="datepicker__label"><%= obj.label %></span>',
+        '<span style="display: inline-flex">',
         '<span class="datepicker__field"><%= obj.renderHourSelect() %></span>:',
         '<span class="datepicker__field"><%= obj.renderMinuteSelect() %></span>',
         '<span class="datepicker__field"><%= obj.renderPeriodSelect() %></span>',
+        '</span>',
       '</div>'
     ].join(''),
 

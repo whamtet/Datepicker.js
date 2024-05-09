@@ -363,6 +363,9 @@ export default class Datepicker {
   _onclick(e) {
     let el = e.target
 
+    if (el.nodeName === 'OPTION') {
+      el = el.parentElement
+    }
     // previous month
     if (el.hasAttribute('data-prev')) {
       this.prev(el.dataset.prev)
