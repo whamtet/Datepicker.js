@@ -168,10 +168,11 @@ export function transform(obj, fn, ctx) {
   return ret.length === 1 ? ret[0] : ret;
 }
 
-export function tmpl(str, data){
-  var fn = new Function("obj",
-    "var p=[],print=function(){p.push.apply(p,arguments);};" +
-    "with(obj){p.push('" +
+export function tmpl(str){
+
+  return new Function("obj",
+    "var p=[];" +
+    "p.push('" +
 
     str
       .replace(/[\r\t\n]/g, " ")
@@ -181,7 +182,6 @@ export function tmpl(str, data){
       .split("\t").join("');")
       .split("%>").join("p.push('")
       .split("\r").join("\\'")
-  + "');}return p.join('');");
+  + "');return p.join('');");
 
-  return data ? fn( data ) : fn;
 }

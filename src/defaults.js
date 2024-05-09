@@ -88,9 +88,9 @@ export default {
      */
     container: [
       '<div class="datepicker__container">',
-        '<%= renderHeader() %>',
-        '<%= renderTimepicker() %>',
-        '<%= renderCalendar() %>',
+        '<%= obj.renderHeader() %>',
+        '<%= obj.renderTimepicker() %>',
+        '<%= obj.renderCalendar() %>',
       '</div>'
     ].join(''),
 
@@ -99,10 +99,10 @@ export default {
      */
     header: [
       '<header class="datepicker__header">',
-        '<a class="datepicker__prev<%= (hasPrev) ? "" : " is-disabled" %>" data-prev>&lsaquo;</a>',
-        '<span class="datepicker__title"><%= renderMonthSelect() %></span>',
-        '<span class="datepicker__title"><%= renderYearSelect() %></span>',
-        '<a class="datepicker__next<%= (hasNext) ? "" : " is-disabled" %>" data-next>&rsaquo;</a>',
+        '<a class="datepicker__prev<%= (obj.hasPrev) ? "" : " is-disabled" %>" data-prev>&lsaquo;</a>',
+        '<span class="datepicker__title"><%= obj.renderMonthSelect() %></span>',
+        '<span class="datepicker__title"><%= obj.renderYearSelect() %></span>',
+        '<a class="datepicker__next<%= (obj.hasNext) ? "" : " is-disabled" %>" data-next>&rsaquo;</a>',
       '</header>'
     ].join(''),
 
@@ -114,10 +114,10 @@ export default {
      */
     timepicker: [
       '<div class="datepicker__time">',
-        '<span class="datepicker__label"><%= label %></span>',
-        '<span class="datepicker__field"><%= renderHourSelect() %></span>:',
-        '<span class="datepicker__field"><%= renderMinuteSelect() %></span>',
-        '<span class="datepicker__field"><%= renderPeriodSelect() %></span>',
+        '<span class="datepicker__label"><%= obj.label %></span>',
+        '<span class="datepicker__field"><%= obj.renderHourSelect() %></span>:',
+        '<span class="datepicker__field"><%= obj.renderMinuteSelect() %></span>',
+        '<span class="datepicker__field"><%= obj.renderPeriodSelect() %></span>',
       '</div>'
     ].join(''),
 
@@ -134,15 +134,15 @@ export default {
       '<table class="datepicker__cal">',
         '<thead>',
           '<tr>',
-            '<% weekdays.forEach(function(name) { %>',
+            '<% obj.weekdays.forEach(function(name) { %>',
               '<th><%= name %></th>',
             '<% }); %>',
           '</tr>',
         '</thead>',
         '<tbody>',
-          '<% days.forEach(function(day, i) { %>',
+          '<% obj.days.forEach(function(day, i) { %>',
             '<%= (i % 7 == 0) ? "<tr>" : "" %>',
-              '<%= renderDay(day) %>',
+              '<%= obj.renderDay(day) %>',
             '<%= (i % 7 == 6) ? "</tr>" : "" %>',
           '<% }); %>',
         '</tbody>',
@@ -164,9 +164,9 @@ export default {
       * classNames - relevant `classNames`
      */
     day: [
-      '<% classNames.push("datepicker__day"); %>',
-      '<td class="<%= classNames.join(" ") %>" data-day="<%= timestamp %>"><div>',
-        '<span class="datepicker__daynum"><%= daynum %></span>',
+      '<% obj.classNames.push("datepicker__day"); %>',
+      '<td class="<%= obj.classNames.join(" ") %>" data-day="<%= obj.timestamp %>"><div>',
+        '<span class="datepicker__daynum"><%= obj.daynum %></span>',
       '</div></td>'
     ].join('')
   }

@@ -130,10 +130,10 @@ export default class Datepicker {
     // setup renderers
     this._renderers = {
       select: tmpl([
-        '<span style="position:relative"><%= text %>',
-          '<select data-<%= type %>="<%= value %>" data-index="<%= index %>"',
+        '<span style="position:relative"><%= obj.text %>',
+          '<select data-<%= obj.type %>="<%= obj.value %>" data-index="<%= obj.index %>"',
               'style="position:absolute;top:0;left:0;width:100%;height:100%;margin:0;opacity:0.005;cursor:pointer;">',
-            '<% options.forEach(function(o) { %>',
+            '<% obj.options.forEach(function(o) { %>',
               '<option value="<%= o.value %>"',
               '<%= o.selected ? " selected" : "" %>',
               '<%= o.disabled ? " disabled" : "" %>',
