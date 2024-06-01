@@ -827,18 +827,19 @@ export default class Datepicker {
         part = 'start'
       }
 
+      const t0 = x => (x || x === 0);
       // correct params
       part = part === 'end' ? part : 'start'
-      hour = hour ? parseInt(hour, 10) : false
-      minute = minute ? parseInt(minute, 10) : false
+      hour = t0(hour) ? parseInt(hour, 10) : false
+      minute = t0(minute) ? parseInt(minute, 10) : false
 
       // set hours
-      if (hour && !isNaN(hour)) {
+      if (t0(hour) && !isNaN(hour)) {
         this._time[part][0] = hour
       }
 
       // set minutes
-      if (minute && !isNaN(minute)) {
+      if (t0(minute) && !isNaN(minute)) {
         this._time[part][1] = minute
       }
     }
