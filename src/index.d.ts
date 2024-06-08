@@ -4,6 +4,7 @@ declare namespace Datepicker {
     multiple: boolean;
     ranged: boolean;
     time: boolean | 'ranged';
+    twentyFourHours: boolean;
 
     // Additional Options
     openOn: Date | "first" | "last" | "today";

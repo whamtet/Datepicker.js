@@ -394,7 +394,12 @@ export default class Datepicker {
     } else if (el.hasAttribute('data-hour') && !el.onchange) {
       el.onchange = () => {
         this.setTime(el.dataset.hour, el.value)
-        el.parentNode.firstChild.textContent = el.selectedOptions[0].textContent
+        const [hour, suffix] = el.selectedOptions[0].textContent.split(' ');
+        el.parentNode.firstChild.textContent = hour;
+        if (suffix) {
+          const timeElements = el.parentElement.parentElement.parentElement.children;
+          timeElements[2].innerHTML = suffix;
+        }
       }
 
     // clicked the minute select but it hasn't been bound
@@ -1163,7 +1168,7 @@ export default class Datepicker {
    * @param {String} name "start" or "end"
    */
   _renderTimepicker(name) {
-    let { ranged, time: timepicker, i18n } = this._opts
+    let { ranged, time: timepicker, i18n, twentyFourHours } = this._opts
 
     if (!timepicker) return
 
@@ -1181,28 +1186,34 @@ export default class Datepicker {
     return this._renderers.timepicker({
       label,
 
-      renderHourSelect: (long = false) => {
-        let options = []
+      renderHourSelect: () => {
+        const options = []
 
-        let hour = time[0]
-        let end = long ? 24 : 12
+        const hour = time[0]
+        const mod12 = h => h ? ((h - 1) % 12) + 1 : 12;
 
-        for (let h = 0; h < end; h++) {
+        for (let h = 0; h < 24; h++) {
+          let text;
+          if (twentyFourHours) {
+            text = h < 10 ? '0' + h : h;
+          } else {
+            const suffix = h < 12 ? ' AM' : ' PM';
+            text = mod12(h) + suffix;
+          }
           options.push({
-            text: (long || h) ? h : '12',
+            text,
             selected: hour === h,
             disabled: false,
             value: h
           })
         }
 
-        if (!long && hour >= 12) {
-          options.forEach((o) => o.selected = (o.value += 12) === hour)
-        } else if (!long) {
-          options.push(options.shift())
+        let text;
+        if (twentyFourHours) {
+          text = hour < 10 ? '0' + hour : hour;
+        } else {
+          text = hour || 12;
         }
-
-        let text = options.filter((o) => o.selected)[0].text
 
         return this._renderers.select({
           index: 0,
@@ -1213,7 +1224,7 @@ export default class Datepicker {
         })
       },
 
-      renderMinuteSelect: (incr = 15) => {
+      renderMinuteSelect: (incr = 5) => {
         let options = []
 
         for (let i = 0; i < 60; i += incr) {
@@ -1237,22 +1248,11 @@ export default class Datepicker {
       },
 
       renderPeriodSelect: () => {
-        return this._renderers.select({
-          index: null,
-          type: 'period',
-          text: time[0] >= 12 ? 'PM' : 'AM',
-          value: name,
-
-          options: [{
-            text: 'AM',
-            value: 'am',
-            selected: time[0] < 12
-          }, {
-            text: 'PM',
-            value: 'pm',
-            selected: time[0] >= 12
-          }]
-        })
+        if (twentyFourHours) {
+          return '';
+        } else {
+          return time[0] < 12 ? 'AM' : 'PM;'
+        }
       }
     })
   }

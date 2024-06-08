@@ -8,6 +8,7 @@ export default {
   multiple: false,
   ranged: false,
   time: false,
+  twentyFourHours: false,
 
   /**
    * Additional options
