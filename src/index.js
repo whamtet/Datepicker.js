@@ -10,6 +10,8 @@ import {
   compareDates,
   isValidDate,
   setToStart,
+  minPair,
+  maxPair,
   dateRange,
   isPlainObject,
   deepExtend,
@@ -409,20 +411,6 @@ export default class Datepicker {
         el.parentNode.firstChild.textContent = el.selectedOptions[0].textContent
       }
 
-    // clicked the period select but it hasn't been bound
-    } else if (el.hasAttribute('data-period') && !el.onchange) {
-      el.onchange = () => {
-        let part = el.dataset.period
-        let diff = (el.value === 'am' ? -12 : 12)
-
-        $$(`[data-hour="${part}"] option`, this.wrapper).forEach((el) => {
-          el.value = parseInt(el.value) + diff
-        })
-
-        this.setTime(part, (this._time ? this._time[part][0] : 0) + diff)
-
-        el.parentNode.firstChild.textContent = el.selectedOptions[0].textContent
-      }
     }
   }
 
@@ -734,8 +722,35 @@ export default class Datepicker {
       }
     })
 
+    if (ranged) {
+      this._adjustTimes()
+    }
+
     // update the element
     this._update()
+  }
+
+  /**
+   * When first / last dates are selected we may need to adjust time to be within min / max
+   */
+  _adjustTimes() {
+    const { min, max } = this._opts
+
+    if (this._selected.length) {
+
+      const minDay = setToStart(min), maxDay = setToStart(max);
+      const t1 = this._selected[0], t2 = this._selected[this._selected.length - 1];
+
+      if (minDay.getTime() === t1) {
+        const minTime = [min.getHours(), min.getMinutes()];
+        this._time.start = maxPair(minTime, this._time.start);
+      }
+
+      if (maxDay.getTime() === t2) {
+        const maxTime = [max.getHours(), max.getMinutes()];
+        this._time.end = minPair(maxTime, this._time.end);
+      }
+    }
   }
 
   /**
@@ -911,6 +926,7 @@ export default class Datepicker {
    */
   dateAllowed(date, dim) {
     let { min, max, within, without, deserialize } = this._opts
+    min = setToStart(min)
     let belowMax, aboveMin = belowMax = true
 
     date = setToStart(isValidDate(date) ? date : deserialize(date))
@@ -1212,7 +1228,7 @@ export default class Datepicker {
         if (twentyFourHours) {
           text = hour < 10 ? '0' + hour : hour;
         } else {
-          text = hour || 12;
+          text = mod12(hour);
         }
 
         return this._renderers.select({
@@ -1251,7 +1267,7 @@ export default class Datepicker {
         if (twentyFourHours) {
           return '';
         } else {
-          return time[0] < 12 ? 'AM' : 'PM;'
+          return time[0] < 12 ? 'AM' : 'PM';
         }
       }
     })

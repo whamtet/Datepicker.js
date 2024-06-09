@@ -105,10 +105,21 @@ export function isValidDate(date) {
 }
 
 export function setToStart(date) {
-  return transform(date, function(d) {
-    if (d) d.setHours(0,0,0,0);
+  if (date) {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
     return d;
-  });
+  } else {
+    return date;
+  }
+}
+
+const pairValue = ([a, b]) => a * 60 + b;
+export function minPair(x, y) {
+  return pairValue(x) > pairValue(y) ? y : x;
+}
+export function maxPair(x, y) {
+  return pairValue(x) > pairValue(y) ? x : y;
 }
 
 export function dateRange(start, end) {
