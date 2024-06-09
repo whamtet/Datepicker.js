@@ -15,8 +15,9 @@ import {
   dateRange,
   isPlainObject,
   deepExtend,
-  transform,
-  tmpl
+  truthy,
+  tmpl,
+  enable,
 } from './helpers.js'
 
 import defaultOptions from './defaults'
@@ -136,7 +137,7 @@ export default class Datepicker {
           '<select data-<%= obj.type %>="<%= obj.value %>" data-index="<%= obj.index %>"',
               'style="position:absolute;top:0;left:0;width:100%;height:100%;margin:0;opacity:0.005;cursor:pointer;">',
             '<% obj.options.forEach(function(o) { %>',
-              '<option value="<%= o.value %>"',
+              '<option class="<%= o.className %>" value="<%= o.value %>"',
               '<%= o.selected ? " selected" : "" %>',
               '<%= o.disabled ? " disabled" : "" %>',
               '><%= o.text %></option>',
@@ -395,13 +396,19 @@ export default class Datepicker {
     // clicked the hour select but it hasn't been bound
     } else if (el.hasAttribute('data-hour') && !el.onchange) {
       el.onchange = () => {
-        this.setTime(el.dataset.hour, el.value)
-        const [hour, suffix] = el.selectedOptions[0].textContent.split(' ');
-        el.parentNode.firstChild.textContent = hour;
-        if (suffix) {
-          const timeElements = el.parentElement.parentElement.parentElement.children;
-          timeElements[2].innerHTML = suffix;
+        const part = el.dataset.hour;
+        if (this.setHour(part, el.value)) {
+          this.render();
+        } else {
+          enable('.minute-bound', el.parentElement.parentElement.parentElement);
+          const [hour, suffix] = el.selectedOptions[0].textContent.split(' ');
+          el.parentNode.firstChild.textContent = hour;
+          if (suffix) {
+            const timeElements = el.parentElement.parentElement.parentElement.children;
+            timeElements[2].innerHTML = suffix;
+          }
         }
+        
       }
 
     // clicked the minute select but it hasn't been bound
@@ -741,12 +748,12 @@ export default class Datepicker {
       const minDay = setToStart(min), maxDay = setToStart(max);
       const t1 = this._selected[0], t2 = this._selected[this._selected.length - 1];
 
-      if (minDay.getTime() === t1) {
+      if (min && minDay.getTime() === t1) {
         const minTime = [min.getHours(), min.getMinutes()];
         this._time.start = maxPair(minTime, this._time.start);
       }
 
-      if (maxDay.getTime() === t2) {
+      if (max && maxDay.getTime() === t2) {
         const maxTime = [max.getHours(), max.getMinutes()];
         this._time.end = minPair(maxTime, this._time.end);
       }
@@ -822,6 +829,39 @@ export default class Datepicker {
   }
 
   /**
+   * Wrapper for setTime that adjusts minute as necessary.
+   * Returns true when hour is extremal
+   * 
+   * @param {String} part "start" or "end"
+   * @param {*} hour 
+   */
+  setHour(part, hour) {
+    if (this._selected && this._selected.length) {
+      const time = this._time[part];
+      if (part === 'start') {
+        const t = this._selected[0];
+        const bound = this._opts.min;
+        if (bound && setToStart(bound).getTime() === t && bound.getHours() === Number(hour)) {
+          const minute = Math.max(bound.getMinutes(), time[1]);
+          this.setTime('start', hour, minute);
+          return true;
+        }
+      } else {
+        const t = this._selected[this._selected.length - 1];
+        const bound = this._opts.max;
+        if (bound && setToStart(bound).getTime() === t && bound.getHours() === Number(hour)) {
+          const minute = Math.min(bound.getMinutes(), time[1]);
+          this.setTime('end', hour, minute);
+          return true;
+        }
+      }
+    }
+    // always setTime
+    this.setTime(part, hour);
+    return false;
+  }
+
+  /**
    * Set the start/end time or part of it
    *
    * @param {String} [part] "start" or "end"
@@ -847,19 +887,18 @@ export default class Datepicker {
         part = 'start'
       }
 
-      const t0 = x => (x || x === 0);
       // correct params
       part = part === 'end' ? part : 'start'
-      hour = t0(hour) ? parseInt(hour, 10) : false
-      minute = t0(minute) ? parseInt(minute, 10) : false
+      hour = truthy(hour) ? parseInt(hour, 10) : false
+      minute = truthy(minute) ? parseInt(minute, 10) : false
 
       // set hours
-      if (t0(hour) && !isNaN(hour)) {
+      if (truthy(hour) && !isNaN(hour)) {
         this._time[part][0] = hour
       }
 
       // set minutes
-      if (t0(minute) && !isNaN(minute)) {
+      if (truthy(minute) && !isNaN(minute)) {
         this._time[part][1] = minute
       }
     }
@@ -1184,7 +1223,25 @@ export default class Datepicker {
    * @param {String} name "start" or "end"
    */
   _renderTimepicker(name) {
-    let { ranged, time: timepicker, i18n, twentyFourHours } = this._opts
+    let { ranged, time: timepicker, i18n, twentyFourHours, min, max } = this._opts
+
+    let minHour, minMinute, maxHour, maxMinute;
+    const isStart = name === 'start';
+    if (this._selected && this._selected.length) {
+
+      const minDay = setToStart(min), maxDay = setToStart(max);
+      const t1 = this._selected[0], t2 = this._selected[this._selected.length - 1];
+
+      if (min && minDay.getTime() === t1) {
+        minHour = min.getHours();
+        minMinute = min.getMinutes();
+      }
+
+      if (max && maxDay.getTime() === t2) {
+        maxHour = max.getHours();
+        maxMinute = max.getMinutes();
+      }
+    }
 
     if (!timepicker) return
 
@@ -1216,10 +1273,11 @@ export default class Datepicker {
             const suffix = h < 12 ? ' AM' : ' PM';
             text = mod12(h) + suffix;
           }
+          const disabled = isStart ? (minHour && h < minHour) : (maxHour && h > maxHour);
           options.push({
             text,
             selected: hour === h,
-            disabled: false,
+            disabled,
             value: h
           })
         }
@@ -1242,13 +1300,31 @@ export default class Datepicker {
 
       renderMinuteSelect: (incr = 5) => {
         let options = []
+        const hour = time[0]
 
         for (let i = 0; i < 60; i += incr) {
+          let className = '', disabled = false;
+          if (isStart) {
+            if (minMinute && i < minMinute) {
+              className = 'minute-bound'
+              if (hour === minHour) {
+                disabled = true;
+              }
+            }
+          } else {
+            if (maxMinute && i > maxMinute) {
+              className = 'minute-bound'
+              if (hour === maxHour) {
+                disabled = true;
+              }
+            }
+          }
           options.push({
             text: i < 10 ? '0' + i : i,
             selected: time[1] === i,
-            disabled: false,
-            value: i
+            disabled,
+            value: i,
+            className,
           })
         }
 
@@ -1259,7 +1335,7 @@ export default class Datepicker {
           type: 'minute',
           value: name,
           options,
-          text
+          text,
         })
       },
 

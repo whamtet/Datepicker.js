@@ -2,6 +2,9 @@ export function $$(selector, ctx) {
   var els = (ctx||document).querySelectorAll(selector);
   return Array.prototype.slice.call(els);
 }
+export function enable(selector, ctx) {
+  $$(selector, ctx).forEach(x => x.disabled = false);
+}
 
 export function matches(el, selector) {
   var matchesSelector = el.matches || el.matchesSelector || el.webkitMatchesSelector || el.msMatchesSelector;
@@ -30,6 +33,10 @@ export function removeClass(el, c) {
 
 export function hasClass(el, c) {
   return c && el.classList.contains(c);
+}
+
+export function truthy(x) {
+  return x || x === 0;
 }
 
 export function toggleClass(el, c, force) {
