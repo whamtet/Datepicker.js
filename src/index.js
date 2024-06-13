@@ -828,6 +828,30 @@ export default class Datepicker {
     this.addDate(date)
   }
 
+  _fakeClick(date) {
+
+    let dayElements = $$('.datepicker__daynum');
+    while (Number(dayElements[0].innerText) > 1) {
+      dayElements = dayElements.slice(1);
+    }
+
+    const target = dayElements[date - 1];
+    this._onmousedown({target, buttons: 1});
+    this._onmouseup({target, buttons: 1});
+
+  }
+
+  selectRange(d1, d2) {
+
+    this.goToDate(d1);
+    this.setTime('start', d1.getHours(), d1.getMinutes());
+    this.setTime('end', d2.getHours(), d2.getMinutes());
+
+    this._fakeClick(d1.getDate());
+    this._fakeClick(d2.getDate());
+
+  }
+
   /**
    * Wrapper for setTime that adjusts minute as necessary.
    * Returns true when hour is extremal
